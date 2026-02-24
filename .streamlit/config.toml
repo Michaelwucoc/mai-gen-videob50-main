@@ -1,0 +1,22 @@
+[server]
+# 允许外部访问：绑定到所有网络接口
+address = "0.0.0.0"
+# 服务端口，可通过端口映射访问
+port = 8501
+# 启用 CORS
+enableCORS = true
+# 允许通过 iframe 嵌入（如需要）
+enableXsrfProtection = true
+
+[browser]
+# 不自动打开浏览器（服务器部署时通常不需要）
+gatherUsageStats = false
+
+[theme]
+# 使用默认主题，用户可在界面内切换
+base = "light"
+primaryColor = "#FF6B6B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
