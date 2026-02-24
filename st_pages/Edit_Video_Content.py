@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import traceback
 from datetime import datetime
-from utils.PageUtils import load_style_config, open_file_explorer, get_video_duration, read_global_config, get_game_type_text
+from utils.PageUtils import load_style_config, switch_to_file_browser, get_video_duration, read_global_config, get_game_type_text
 from utils.PathUtils import get_user_media_dir
 from utils.DataUtils import get_valid_time_range
 from utils.VideoUtils import render_one_video_clip, get_video_preview_frame
@@ -74,10 +74,9 @@ def update_preview(preview_placeholder, config, current_index):
         with info_col2:
             open_video_dir_btn = st.button("打开源视频所在文件夹", key=f"open_folder_{chart_id}", disabled=not video_path)
             if video_path:
-                absolute_path = os.path.abspath(os.path.dirname(video_path))
                 st.text(f"谱面确认视频文件：{os.path.basename(video_path)}")
                 if open_video_dir_btn:
-                    open_file_explorer(absolute_path)
+                    switch_to_file_browser("downloads")
         main_col1, main_col2 = st.columns(2)
         with main_col1:
             st.image(achievement_image_path, caption="成绩图片")
@@ -406,9 +405,8 @@ if video_configs:
                     st.success(res['info'])
                 else:
                     st.error(res['info'])
-            absolute_path = os.path.abspath(video_output_path)
             if st.button("打开导出视频所在文件夹"):
-                open_file_explorer(absolute_path)
+                switch_to_file_browser("output_videos")
 
 with st.expander("[DEBUG区域]其他操作"):
     st.write("如果需要检查原始配置，点击下方按钮读取数据库原始信息。")

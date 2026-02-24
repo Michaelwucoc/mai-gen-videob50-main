@@ -7,13 +7,15 @@ services:
     build: .
     container_name: mai-gen-videob50
     ports:
-      # 将容器 8501 映射到主机，访问 http://<主机IP>:8501
-      - "8501:8501"
+      # 默认仅本机可访问；需公网时改为 "8501:8501"
+      - "127.0.0.1:8501:8501"
     volumes:
       # 持久化数据目录：/www/maigen
       - /www/maigen/db:/app/db_data
       - /www/maigen/cred_datas:/app/cred_datas
       - /www/maigen/videos:/app/videos
+      - /www/maigen/b50_datas:/app/b50_datas
+      - /www/maigen/static_user:/app/static/user
       - /www/maigen/user_config:/root/.mai-gen-videob50
       - /www/maigen/config:/app/config
     environment:

@@ -5,12 +5,12 @@ from copy import deepcopy
 from pathlib import Path
 from datetime import datetime
 from utils.themes import DEFAULT_STYLES
-from utils.PageUtils import read_global_config, get_game_type_text, DEFAULT_STYLE_CONFIG_FILE_PATH
+from utils.PageUtils import read_global_config, get_game_type_text, get_style_config_path
 from utils.ImageUtils import generate_single_image
 from utils.VideoUtils import get_video_preview_frame
 
 DEFAULT_STYLE_KEY = "Prism"
-video_style_config_path = DEFAULT_STYLE_CONFIG_FILE_PATH
+video_style_config_path = get_style_config_path()
 
 # 配置素材文件夹
 default_static_dir = "./static/assets"

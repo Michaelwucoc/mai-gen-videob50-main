@@ -14,11 +14,11 @@ DATA_ROOT="/www/maigen"
 
 # 创建持久化数据目录
 init_data_dirs() {
-    if ! mkdir -p "$DATA_ROOT"/{db,cred_datas,videos,user_config,config} 2>/dev/null; then
+    if ! mkdir -p "$DATA_ROOT"/{db,cred_datas,videos,b50_datas,static_user,user_config,config} 2>/dev/null; then
         echo "创建目录 $DATA_ROOT 需要 sudo 权限"
-        sudo mkdir -p "$DATA_ROOT"/{db,cred_datas,videos,user_config,config}
+        sudo mkdir -p "$DATA_ROOT"/{db,cred_datas,videos,b50_datas,static_user,user_config,config}
     fi
-    echo "数据目录: $DATA_ROOT/{db,cred_datas,videos,user_config,config}"
+    echo "数据目录: $DATA_ROOT/{db,cred_datas,videos,b50_datas,static_user,user_config,config}"
 }
 
 # 检查 Docker
@@ -53,10 +53,9 @@ cmd_start() {
     echo "=========================================="
     echo "  mai-chu 分表视频生成器 已启动"
     echo "=========================================="
-    echo "  访问地址: http://localhost:${PORT}"
-    echo "  或:       http://<服务器IP>:${PORT}"
+    echo "  访问地址: http://localhost:${PORT}（默认仅本机）"
     echo ""
-    echo "  确保防火墙已开放 ${PORT} 端口"
+    echo "  需公网访问时，修改 docker-compose.yml 中 ports 为 \"8501:8501\""
     echo "=========================================="
 }
 

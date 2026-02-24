@@ -264,8 +264,8 @@ def st_init_downloader():
         st.toast("正在初始化Bilibili下载器...")
         if not no_credential:
             if not os.environ.get("DISPLAY") and os.name != "nt":
-                st.info("🐳 服务器模式：二维码将输出到控制台/日志。或前往「系统设置」上传本地生成的凭证文件。")
-            st.toast("正在尝试登录B站...如果弹出二维码窗口，请使用bilibili客户端扫描进行登录")
+                st.info("🐳 服务器模式：请先前往 **B站登录** 页面完成扫码，或上传凭证文件。")
+            st.toast("正在尝试登录B站...如有弹窗请扫码，或前往 B站登录 页面")
         dl_instance = BilibiliDownloader(
             proxy=proxy_address if use_proxy else None,
             no_credential=no_credential,

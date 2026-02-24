@@ -3,7 +3,7 @@ import traceback
 import os
 
 from datetime import datetime
-from utils.PageUtils import load_style_config, open_file_explorer, read_global_config, write_global_config, get_game_type_text
+from utils.PageUtils import load_style_config, switch_to_file_browser, read_global_config, write_global_config, get_game_type_text
 from utils.PathUtils import get_user_media_dir
 from utils.VideoUtils import render_all_video_clips, combine_full_video_direct, combine_full_video_ffmpeg_concat_gl, render_complete_full_video
 from db_utils.DatabaseDataHandler import get_database_handler
@@ -188,9 +188,9 @@ if st.button("开始生成视频"):
             st.error(f"完整视频生成失败，错误详情: {traceback.print_exc()}")
 
 abs_path = os.path.abspath(video_output_path)
-if st.button("打开视频输出文件夹"):
-    open_file_explorer(abs_path)
-st.markdown(f"> [TIPS] - 如果打开文件夹失败，请在此路径中寻找生成的视频：{abs_path}")
+if st.button("📂 在网页中查看生成的视频"):
+    switch_to_file_browser("output_videos")
+st.markdown(f"> 生成文件路径：`{abs_path}`")
 
 # 添加分割线
 st.divider()
@@ -220,7 +220,7 @@ with st.expander("展开其他视频生成方案"):
                 st.info("已启动批量视频片段生成，请在控制台窗口查看进度……")
             with st.spinner("正在拼接视频……"):
                 combine_full_video_direct(video_output_path)
-            st.success("所有任务已退出，请从上方按钮打开文件夹查看视频生成结果")
+            st.success("所有任务已退出，请点击上方「在网页中查看生成的视频」查看结果")
 
     with st.container(border=True):
         st.write("【更多过渡效果】使用ffmpeg concat生成视频，允许自定义片段过渡效果")
@@ -260,4 +260,4 @@ with st.expander("展开其他视频生成方案"):
                 with st.spinner("正在拼接视频……"):
                     combine_full_video_ffmpeg_concat_gl(video_output_path, trans_name, trans_time)
                     st.info("已启动视频拼接任务，请在控制台窗口查看进度……")
-                st.success("所有任务已退出，请从上方按钮打开文件夹查看视频生成结果")
+                st.success("所有任务已退出，请点击上方「在网页中查看生成的视频」查看结果")

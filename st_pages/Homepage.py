@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.PageUtils import change_theme, get_game_type_text, update_music_metadata, DEFAULT_STYLE_CONFIG_FILE_PATH, get_db_manager, clear_all_user_data
+from utils.PageUtils import change_theme, get_game_type_text, update_music_metadata, get_style_config_path, get_db_manager, clear_all_user_data
 from db_utils.DataMigration import old_data_migration
 from utils.themes import THEME_COLORS, DEFAULT_STYLES
 from utils.WebAgentUtils import st_init_cache_pathes
@@ -197,7 +197,7 @@ with st.container(border=True):
 st_init_cache_pathes()
 
 # 初始化视频模板样式配置
-if not os.path.exists(DEFAULT_STYLE_CONFIG_FILE_PATH):
+if not os.path.exists(get_style_config_path()):
     # 根据游戏类型初始化默认样式配置
     default_style_config = {}
     for game_type in ['maimai', 'chunithm']:
@@ -205,7 +205,7 @@ if not os.path.exists(DEFAULT_STYLE_CONFIG_FILE_PATH):
         game_styles = DEFAULT_STYLES.get(game_type, [])
         if game_styles:
             default_style_config[game_type] = game_styles[0]
-    with open(DEFAULT_STYLE_CONFIG_FILE_PATH, "w", encoding='utf-8') as f:
+    with open(get_style_config_path(), "w", encoding='utf-8') as f:
         json.dump(default_style_config, f, ensure_ascii=False, indent=4)
 
 # 系统状态检查

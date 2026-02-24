@@ -18,6 +18,14 @@ system_settings_page = st.Page("st_pages/System_Settings.py",
                 title="系统设置",
                 icon=":material/settings:",
                 url_path="settings")
+file_browser_page = st.Page("st_pages/File_Browser.py",
+                title="文件浏览",
+                icon=":material/folder_open:",
+                url_path="files")
+bilibili_login_page = st.Page("st_pages/Bilibili_Login.py",
+                title="B站登录",
+                icon=":material/qr_code_scanner:",
+                url_path="bilibili_login")
 
 
 setup_page = st.Page("st_pages/Setup_Achievements.py",
@@ -56,6 +64,8 @@ composite_page = st.Page("st_pages/Composite_Videos.py",
 pg = st.navigation(
     {
         "首页": [homepage, custom_video_style],
+        "文件浏览": [file_browser_page],
+        "B站登录": [bilibili_login_page],
         "系统设置": [system_settings_page],
         "数据管理": [
             setup_page,

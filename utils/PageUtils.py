@@ -13,7 +13,19 @@ from db_utils.DatabaseManager import DatabaseManager
 import streamlit as st
 from typing import Tuple
 
-DEFAULT_STYLE_CONFIG_FILE_PATH = "./static/video_style_config.json"
+# 支持 Docker：优先使用 config 卷中的持久化配置
+def _get_style_config_path():
+    docker_config = os.path.join(os.path.dirname(__file__), "..", "config", "video_style_config.json")
+    local_config = "./static/video_style_config.json"
+    if os.path.exists(os.path.dirname(docker_config)):
+        return os.path.abspath(docker_config)
+    return local_config
+
+def get_style_config_path():
+    """获取视频样式配置路径（支持 Docker 持久化）"""
+    return _get_style_config_path()
+
+DEFAULT_STYLE_CONFIG_FILE_PATH = "./static/video_style_config.json"  # 兼容旧代码
 
 # LEVEL_LABELS = {
 #     0: "BASIC",
@@ -131,7 +143,9 @@ def write_global_config(config):
         print(f"Error writing global config: {e}")
 
 # r/w video_style_config.json
-def load_style_config(game_type, config_file=DEFAULT_STYLE_CONFIG_FILE_PATH):
+def load_style_config(game_type, config_file=None):
+    if config_file is None:
+        config_file = _get_style_config_path()
     if os.path.exists(config_file):
         with open(config_file, 'r', encoding='utf-8') as f:
             style_config = json.load(f)
@@ -191,6 +205,7 @@ def get_video_duration(video_path):
 
 
 def open_file_explorer(path):
+    """打开系统文件管理器（本地运行有效，服务器/Docker 下无效）"""
     try:
         # Windows
         if platform.system() == "Windows":
@@ -204,6 +219,12 @@ def open_file_explorer(path):
         return True
     except Exception as e:
         return False
+
+
+def switch_to_file_browser(folder="images"):
+    """跳转到 Web 文件浏览页面，在网页中查看文件（适用于服务器部署）"""
+    st.session_state.file_browser_folder = folder
+    st.switch_page("st_pages/File_Browser.py")
     
 
 def change_theme(theme_dict):

@@ -4,7 +4,7 @@ import traceback
 from copy import deepcopy
 from datetime import datetime
 from utils.ImageUtils import generate_single_image, check_mask_waring
-from utils.PageUtils import get_game_type_text, load_style_config, open_file_explorer
+from utils.PageUtils import get_game_type_text, load_style_config, switch_to_file_browser
 from db_utils.DatabaseDataHandler import get_database_handler
 from utils.PathUtils import get_user_media_dir
 from utils.VideoUtils import save_jacket_background_image
@@ -195,12 +195,8 @@ if archive_id:
                         st.code(traceback.format_exc())
         
         with col_gen2:
-            if os.path.exists(image_path):
-                absolute_path = os.path.abspath(image_path)
-            else:
-                absolute_path = os.path.abspath(os.path.dirname(image_path))
-            if st.button("📂 打开图片文件夹", key=f"open_folder_{username}", use_container_width=True):
-                open_file_explorer(absolute_path)
+            if st.button("📂 在网页中查看图片", key=f"open_folder_{username}", use_container_width=True):
+                switch_to_file_browser("images")
         
         # 检查是否已有图片
         # if os.path.exists(image_path):

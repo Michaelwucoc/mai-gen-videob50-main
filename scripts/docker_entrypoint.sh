@@ -14,4 +14,5 @@ if [ ! -f "$CONFIG_FILE" ] && [ -f "$DEFAULT_CONFIG" ]; then
     cp "$DEFAULT_CONFIG" "$CONFIG_FILE"
 fi
 
-exec "$@"
+# 容器内需监听 0.0.0.0 以便 Docker 端口映射；是否公网由 docker-compose ports 控制
+exec streamlit run st_app.py --server.address=0.0.0.0 --server.port=8501 --server.headless true
