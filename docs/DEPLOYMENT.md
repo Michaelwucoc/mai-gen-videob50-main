@@ -53,17 +53,17 @@ sudo firewall-cmd --reload
 
 ## 数据持久化
 
-Docker 会将以下目录映射到主机，重启容器后数据不会丢失：
+Docker 会将以下目录映射到主机 `/www/maigen/`，重启容器后数据不会丢失：
 
 | 主机路径 | 说明 |
 |---------|------|
-| `./data/db` | 数据库、存档 |
-| `./data/cred_datas` | B站登录凭证等 |
-| `./data/videos` | 下载和生成的视频 |
-| `./data/user_config` | 用户偏好 |
-| `./data/config` | 全局配置（`global_config.yaml`） |
+| `/www/maigen/db` | 数据库、存档 |
+| `/www/maigen/cred_datas` | B站登录凭证等 |
+| `/www/maigen/videos` | 下载和生成的视频 |
+| `/www/maigen/user_config` | 用户偏好 |
+| `/www/maigen/config` | 全局配置（`global_config.yaml`） |
 
-首次运行时会自动从镜像复制默认配置到 `./data/config/`。
+首次运行时 `deploy.sh` 会自动创建上述目录（若 `/www` 不存在需 sudo 权限）。
 
 ---
 

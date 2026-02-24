@@ -9,10 +9,16 @@ cd "$SCRIPT_DIR"
 PORT=8501
 CONTAINER_NAME="mai-gen-videob50"
 
+# 持久化数据目录
+DATA_ROOT="/www/maigen"
+
 # 创建持久化数据目录
 init_data_dirs() {
-    mkdir -p data/db data/cred_datas data/videos data/user_config data/config
-    echo "已创建数据目录: data/{db,cred_datas,videos,user_config,config}"
+    if ! mkdir -p "$DATA_ROOT"/{db,cred_datas,videos,user_config,config} 2>/dev/null; then
+        echo "创建目录 $DATA_ROOT 需要 sudo 权限"
+        sudo mkdir -p "$DATA_ROOT"/{db,cred_datas,videos,user_config,config}
+    fi
+    echo "数据目录: $DATA_ROOT/{db,cred_datas,videos,user_config,config}"
 }
 
 # 检查 Docker
