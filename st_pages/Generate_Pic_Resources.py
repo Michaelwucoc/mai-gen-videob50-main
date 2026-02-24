@@ -5,6 +5,7 @@ from copy import deepcopy
 from datetime import datetime
 from utils.ImageUtils import generate_single_image, check_mask_waring
 from utils.PageUtils import get_game_type_text, load_style_config, switch_to_file_browser
+from utils.themes import DEFAULT_STYLES
 from db_utils.DatabaseDataHandler import get_database_handler
 from utils.PathUtils import get_user_media_dir
 from utils.VideoUtils import save_jacket_background_image
@@ -24,6 +25,8 @@ def st_generate_b50_images(placeholder, user_id, archive_id, save_paths):
 
     # read style_config - 使用从数据库加载的game_type，而不是session_state的G_type
     style_config = load_style_config(game_type=game_type)
+    if not style_config and game_type in DEFAULT_STYLES:
+        style_config = DEFAULT_STYLES[game_type][0]  # 使用默认样式
     
     with placeholder.container(border=True):
         pb = st.progress(0, text=f"正在生成成绩背景图片...")

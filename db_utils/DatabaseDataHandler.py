@@ -381,7 +381,7 @@ class DatabaseDataHandler:
                     'type': record['chart_type'],
                     'level_index': record['level_index'],
                     'ds': float(record['difficulty']),
-                    'achievements': f"{record['achievement']:.4f}", # Format as string with 4 decimal places
+                    'achievements': f"{(record.get('achievement') or 0):.4f}",  # 达成率
                     'fc': record['fc_status'],
                     'fs': record['fs_status'],
                     'dxScore': record['dx_score'],
@@ -463,7 +463,7 @@ class DatabaseDataHandler:
                     'type': record['chart_type'],
                     'level_index': record['level_index'],
                     'ds': float(record['difficulty']),
-                    'achievements': f"{record['achievement']:.4f}", # Format as string with 4 decimal places
+                    'achievements': f"{(record.get('achievement') or 0):.4f}",  # 达成率
                     'fc': record['fc_status'],
                     'fs': record['fs_status'],
                     'dxScore': record['dx_score'],

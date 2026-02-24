@@ -73,19 +73,27 @@ images = [f for f in files if os.path.splitext(f)[1].lower() in img_ext]
 videos = [f for f in files if os.path.splitext(f)[1].lower() in vid_ext]
 others = [f for f in files if f not in images and f not in videos]
 
-# 显示图片
+# 显示图片（支持加载更多）
 if images:
     st.markdown("### 🖼️ 图片预览")
-    cols = st.columns(min(4, len(images)))
-    for i, f in enumerate(images[:20]):  # 最多显示 20 张
+    per_page = 20
+    n_shown = st.session_state.get("file_browser_images_shown", per_page)
+    n_shown = min(n_shown, len(images))
+    cols = st.columns(4)
+    for i, f in enumerate(images[:n_shown]):
         with cols[i % 4]:
             fp = os.path.join(browse_path, f)
             try:
                 st.image(fp, caption=f, use_container_width=True)
             except Exception:
                 st.caption(f)
-    if len(images) > 20:
-        st.caption(f"共 {len(images)} 张图片，仅展示前 20 张")
+    if n_shown < len(images):
+        if st.button("加载更多", key="load_more_images"):
+            st.session_state.file_browser_images_shown = min(n_shown + per_page, len(images))
+            st.rerun()
+        st.caption(f"已显示 {n_shown} / {len(images)} 张")
+    else:
+        st.caption(f"共 {len(images)} 张图片")
 
 # 显示视频
 if videos:
@@ -118,4 +126,5 @@ selected = st.radio(
 )
 if selected != folder:
     st.session_state.file_browser_folder = selected
+    st.session_state.pop("file_browser_images_shown", None)  # 切换目录时重置
     st.rerun()

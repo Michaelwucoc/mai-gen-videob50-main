@@ -5,11 +5,19 @@ B站 Web 登录 - 在网页中显示二维码，无需 tkinter 或终端
 import requests
 import qrcode
 import io
-import time
 from typing import Optional, Tuple
 from bilibili_api import Credential, user, sync
 
-# B站二维码登录 API（Web 端，新版）
+# 请求头：模拟浏览器，避免被 B站 风控拦截
+DEFAULT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Referer": "https://www.bilibili.com/",
+    "Origin": "https://www.bilibili.com",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+}
+
+# B站二维码登录 API
 API_QR_GENERATE = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
 API_QR_POLL = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
 # 备用旧版 API
@@ -29,31 +37,56 @@ def get_qrcode_image(url: str, size: int = 256) -> bytes:
     return buf.getvalue()
 
 
-def fetch_qrcode_info(proxy: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
+def fetch_qrcode_info(proxy: Optional[str] = None) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     获取二维码登录信息
-    Returns: (url, qrcode_key) 或 (None, None)
+    Returns: (url, qrcode_key, error_msg) 或 (None, None, error_msg)
     """
     proxies = {"http": proxy, "https": proxy} if proxy else None
-    # 优先尝试新版 API
-    try:
-        r = requests.get(API_QR_GENERATE, timeout=10, proxies=proxies)
-        r.raise_for_status()
-        data = r.json()
-        if data.get("code") == 0:
-            return data["data"]["url"], data["data"]["qrcode_key"]
-    except Exception as e:
-        print(f"新版 API 获取二维码失败: {e}")
-    # 备用：旧版 API
-    try:
-        r = requests.get(API_QR_GENERATE_OLD, timeout=10, proxies=proxies)
-        r.raise_for_status()
-        data = r.json()
-        if data.get("code") == 0:
-            return data["data"]["url"], data["data"]["oauthKey"]
-    except Exception as e:
-        print(f"旧版 API 获取二维码失败: {e}")
-    return None, None
+    last_err = "API 返回格式异常"
+    # 优先尝试新版 API，失败则尝试旧版
+    for api_url in [API_QR_GENERATE, API_QR_GENERATE_OLD]:
+        try:
+            r = requests.get(
+                api_url,
+                headers=DEFAULT_HEADERS,
+                timeout=15,
+                proxies=proxies,
+                verify=True,
+            )
+            r.raise_for_status()
+            data = r.json()
+            if data.get("code") == 0 and "data" in data:
+                d = data["data"]
+                url_val = d.get("url")
+                key_val = d.get("qrcode_key") or d.get("oauthKey")
+                if url_val and key_val:
+                    return url_val, key_val, None
+            last_err = data.get("message", f"API code={data.get('code')}")
+        except requests.exceptions.SSLError as e:
+            last_err = f"SSL 错误: {e}"
+            try:
+                r = requests.get(api_url, headers=DEFAULT_HEADERS, timeout=15, proxies=proxies, verify=False)
+                r.raise_for_status()
+                data = r.json()
+                if data.get("code") == 0 and "data" in data:
+                    d = data["data"]
+                    url_val = d.get("url")
+                    key_val = d.get("qrcode_key") or d.get("oauthKey")
+                    if url_val and key_val:
+                        return url_val, key_val, None
+            except Exception:
+                pass
+        except requests.exceptions.ProxyError as e:
+            last_err = f"代理连接失败: {e}"
+        except requests.exceptions.ConnectionError as e:
+            last_err = f"网络连接失败，请检查能否访问 bilibili.com: {e}"
+        except requests.exceptions.Timeout:
+            last_err = "请求超时，请检查网络"
+        except Exception as e:
+            last_err = str(e)
+            print(f"B站二维码 API 请求失败 ({api_url}): {e}")
+    return None, None, last_err
 
 
 def poll_login_status(qrcode_key: str, proxy: Optional[str] = None) -> dict:
@@ -67,6 +100,7 @@ def poll_login_status(qrcode_key: str, proxy: Optional[str] = None) -> dict:
         r = requests.get(
             API_QR_POLL,
             params={"qrcode_key": qrcode_key},
+            headers=DEFAULT_HEADERS,
             timeout=10,
             proxies=proxies)
         r.raise_for_status()
@@ -88,6 +122,7 @@ def poll_login_status(qrcode_key: str, proxy: Optional[str] = None) -> dict:
         r = requests.post(
             API_QR_POLL_OLD,
             data={"oauthKey": qrcode_key},
+            headers=DEFAULT_HEADERS,
             timeout=10,
             proxies=proxies)
         r.raise_for_status()

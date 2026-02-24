@@ -41,12 +41,15 @@ if "bili_login_success" not in st.session_state:
 # 获取二维码
 if st.session_state.bili_qrcode_key is None and not st.session_state.bili_login_success:
     with st.spinner("正在获取二维码..."):
-        url, key = fetch_qrcode_info(proxy)
+        url, key, err_msg = fetch_qrcode_info(proxy)
     if url and key:
         st.session_state.bili_qrcode_url = url
         st.session_state.bili_qrcode_key = key
     else:
         st.error("获取二维码失败，请检查网络或代理设置后重试。")
+        if err_msg:
+            st.code(err_msg, language=None)
+        st.markdown("**排查建议：** 若在海外或无法直连 B站，请在「系统设置」中开启代理并填写正确的 `PROXY_ADDRESS`。")
         st.stop()
 
 # 显示二维码（仅在未登录成功时）

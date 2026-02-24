@@ -5,14 +5,34 @@ import traceback
 from utils.PageUtils import load_music_metadata
 from PIL import Image, ImageDraw, ImageFont
 
+# 项目根目录（用于解析相对路径）
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+
+def _resolve_path(path: str) -> str:
+    """将相对路径解析为绝对路径，确保在 Docker/不同 cwd 下都能找到资源"""
+    if not path:
+        return path
+    path = str(path).strip()
+    if os.path.isabs(path):
+        return os.path.normpath(path)
+    # 相对路径：基于项目根目录
+    if path.startswith("./"):
+        path = path[2:]
+    full = os.path.join(_PROJECT_ROOT, path)
+    return os.path.normpath(full)
+
+
 # 重构note：成绩图生成模块不再主动获取外部资源（如下载封面、获取谱面详细信息等），而是依赖传入数据
 # 以此减少模块间耦合，简化调用流程，由调用方负责准备所需数据
 
 class MaiImageGenerater:
     def __init__(self, style_config=None):
-        self.asset_paths = style_config.get("asset_paths", {})
-        self.image_root_path = self.asset_paths.get("score_image_assets_path", "./static/assets/images/")
-        self.font_path = self.asset_paths.get("ui_font", "static/assets/fonts/FOT_NewRodin_Pro_EB.otf")
+        self.asset_paths = style_config.get("asset_paths", {}) if style_config else {}
+        raw_path = self.asset_paths.get("score_image_assets_path", "./static/assets/images/")
+        self.image_root_path = _resolve_path(raw_path.rstrip("/") + "/")
+        raw_font = self.asset_paths.get("ui_font", "static/assets/fonts/FOT_NewRodin_Pro_EB.otf")
+        self.font_path = _resolve_path(raw_font)
 
 
     def DsLoader(self, level: int = 0, Ds: float = 0.0):
@@ -59,8 +79,14 @@ class MaiImageGenerater:
             return _Type.copy()
 
     def AchievementLoader(self, Achievement: str):
-        IntegerPart = Achievement.split('.')[0]
-        DecimalPart = Achievement.split('.')[1]
+        # 确保格式为 "X.XXXX"，兼容 "100" 或 100.0 等
+        if not isinstance(Achievement, str):
+            Achievement = f"{float(Achievement or 0):.4f}"
+        if '.' not in Achievement:
+            Achievement = f"{float(Achievement):.4f}"
+        parts = Achievement.split('.')
+        IntegerPart = parts[0]
+        DecimalPart = (parts[1] + '0000')[:4] if len(parts) > 1 else '0000'
 
         Background = Image.new('RGBA', (800, 118), (0, 0, 0, 0))
         Background.convert("RGBA")
@@ -195,8 +221,7 @@ class MaiImageGenerater:
         
         try:
             assert record_detail['level_index'] in range(0, 5)
-            image_asset_path = os.path.join(os.getcwd(),
-                                            f"{self.image_root_path}/AchievementBase/{record_detail['level_index']}.png")
+            image_asset_path = os.path.join(self.image_root_path, f"AchievementBase/{record_detail['level_index']}.png")
             dx_stars = self.count_dx_stars(record_detail['dxScore'], record_detail.get('max_dx_score', 0))
             with Image.open(image_asset_path) as Background:
                 Background = Background.convert("RGBA")
@@ -213,7 +238,10 @@ class MaiImageGenerater:
 
                 # 加载类型
                 TypePosition = (1200, 75)
-                _Type = self.TypeLoader(record_detail["type"])
+                _type_val = record_detail.get("type", 1)
+                if _type_val not in (0, 1):  # SD=0, DX=1，其他默认为 DX
+                    _type_val = 1
+                _Type = self.TypeLoader(_type_val)
                 TempImage.paste(_Type, TypePosition, _Type)
 
                 # 加载定数
@@ -275,7 +303,9 @@ class MaiImageGenerater:
                 Background = Image.alpha_composite(Background, TempImage)
 
         except Exception as e:
-            print(f"Error generating achievement: {e}")
+            print(f"Error generating maimai achievement: {e}")
+            print(f"  record_detail keys: {list(record_detail.keys()) if record_detail else 'None'}")
+            print(f"  image_root_path: {getattr(self, 'image_root_path', 'N/A')}")
             print(traceback.format_exc())
             Background = Image.new('RGBA', (1520, 500), (0, 0, 0, 255))
 
@@ -284,11 +314,12 @@ class MaiImageGenerater:
 
 class ChuniImageGenerater:
     def __init__(self, style_config=None):
-        self.asset_paths = style_config.get("asset_paths", {})
-        self.image_root_path = self.asset_paths.get("score_image_assets_path", "./static/assets/images/Chunithm")
-        self.ui_font_path = self.asset_paths.get("ui_font", "./static/assets/fonts/SOURCEHANSANSSC-BOLD.OTF")
-        self.title_font_path = "./static/assets/fonts/SweiBellLegCJKsc-Black.ttf"
-        self.level_font_path = "./static/assets/fonts/NimbusSanL-Bol.otf"
+        self.asset_paths = style_config.get("asset_paths", {}) if style_config else {}
+        raw_path = self.asset_paths.get("score_image_assets_path", "./static/assets/images/Chunithm")
+        self.image_root_path = _resolve_path(raw_path.rstrip("/") + "/")
+        self.ui_font_path = _resolve_path(self.asset_paths.get("ui_font", "static/assets/fonts/SOURCEHANSANSSC-BOLD.OTF"))
+        self.title_font_path = _resolve_path("static/assets/fonts/SweiBellLegCJKsc-Black.ttf")
+        self.level_font_path = _resolve_path("static/assets/fonts/NimbusSanL-Bol.otf")
 
     def FrameLoader(self, level_index: int = 0):
         with Image.open(f"{self.image_root_path}/Frames/{level_index}.png") as _frame:
@@ -519,8 +550,7 @@ class ChuniImageGenerater:
         
         try:
             assert record_detail['level_index'] in range(0, 5)
-            image_base_path = os.path.join(os.getcwd(),
-                                            f"{self.image_root_path}/content_base_chunithm_verse.png")
+            image_base_path = os.path.join(self.image_root_path, "content_base_chunithm_verse.png")
             with Image.open(image_base_path) as background:
 
                 # background size: 1920x1080
@@ -637,7 +667,8 @@ def generate_single_image(game_type, style_config, record_detail, output_path, t
     if game_type == "maimai":
         function = MaiImageGenerater(style_config=selected_style_config)
         # 加载通用外框素材
-        background_path = selected_style_config["asset_paths"]["score_image_base"]
+        raw_bg = selected_style_config["asset_paths"]["score_image_base"]
+        background_path = _resolve_path(raw_bg)
         with Image.open(background_path) as background:
             # 生成并调整单个成绩图片
             single_image = function.GenerateOneAchievement(record_detail)
